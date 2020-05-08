@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  site:
+    container_name: ${APP_NAME}
+    build: .
+    restart: unless-stopped
+    ports:
+      - ${PORT}:${PORT}
+    env_file: .env
+    volumes:
+      - ./app/:/var/www/
+    command: "dev"

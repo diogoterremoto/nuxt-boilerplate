@@ -1,0 +1,44 @@
+{
+  "steps": [
+    {
+      "id": "build-image",
+      "name": "gcr.io/cloud-builders/docker",
+      "args": ["build", "-t", "eu.gcr.io/$PROJECT_ID/${_APP_NAME}", "."]
+    },
+    {
+      "id": "push-image",
+      "name": "gcr.io/cloud-builders/docker",
+      "args": ["push", "-t", "eu.gcr.io/$PROJECT_ID/${_APP_NAME}"]
+    },
+    {
+      "id": "get-ssh-private-key",
+      "name": "gcr.io/cloud-builders/gcloud",
+      "entrypoint": "bash",
+      "args": [
+        "-c",
+        "gcloud secrets versions access latest --secret=${_SECRET_NAME} > /root/.ssh/id_rsa"
+      ],
+      "volumes": [
+        {
+          "name": "ssh",
+          "path": "/root/.ssh"
+        }
+      ]
+    },
+    {
+      "id": "deploy",
+      "name": "gcr.io/cloud-builders/gcloud",
+      "entrypoint": "bash",
+      "args": [
+        "-c",
+        "ssh ${_USER}@${_HOST} \"cd ${_DOCKER_COMPOSE_PATH} && docker-compose pull ${_SERVICE_NAME} && docker-compose up --detach ${_SERVICE_NAME}\""
+      ]
+    }
+  ],
+  "substitutions": {
+    "_DOCKER_COMPOSE_PATH": "/var/www/"
+  },
+  "options": {
+    "substitution_option": "ALLOW_LOOSE"
+  }
+}
